@@ -1,3 +1,4 @@
+# coding: utf-8
 """
 Django settings for cripto_like project.
 
@@ -11,6 +12,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
+import random
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -49,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'social_django.middleware.SocialAuthExceptionMiddleware',
 ]
 
 ROOT_URLCONF = 'cripto_like.urls'
@@ -65,6 +68,9 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
+                'social_django.context_processors.backends',  # <--
+                'social_django.context_processors.login_redirect', # <--
             ],
         },
     },
@@ -106,7 +112,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-ru'
 
 TIME_ZONE = 'UTC'
 
@@ -117,10 +123,60 @@ USE_L10N = True
 USE_TZ = True
 
 # vk
-SOCIAL_AUTH_VK_OAUTH2_KEY = '5756295'
-SOCIAL_AUTH_VK_OAUTH2_SECRET = '0yLYvnSw9cBWF7nU3StU'
+SOCIAL_AUTH_VK_OAUTH2_KEY = '6162859'
+SOCIAL_AUTH_VK_OAUTH2_SECRET = 'AkO0A0lDghdIXwf4LUHK'
 SOCIAL_AUTH_VK_OAUTH2_EXTRA_DATA = ['sex', 'bdate', 'city', 'country']
 
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.vk.VKOAuth2',
+
+    'django.contrib.auth.backends.ModelBackend',
+)
+TEMPLATE_CONTEXT_PROCESSORS = (
+    'django.contrib.auth.context_processors.auth',
+    'django.core.context_processors.request',
+    'social_auth.context_processors.social_auth_by_name_backends',
+)
+
+# Если имя не удалось получить, то можно его сгенерировать
+SOCIAL_AUTH_DEFAULT_USERNAME = lambda: random.choice(['Darth_Vader', 'Obi-Wan_Kenobi', 'R2-D2', 'C-3PO', 'Yoda'])
+# Разрешаем создавать пользователей через social_auth
+SOCIAL_AUTH_CREATE_USERS = True
+
+LOGIN_URL = 'login'
+LOGOUT_URL = 'logout'
+LOGIN_REDIRECT_URL = 'home'
+
+# Перечислим pipeline, которые последовательно буду обрабатывать респонс
+SOCIAL_AUTH_PIPELINE = (
+    'social.pipeline.social_auth.social_details',
+    'social.pipeline.social_auth.social_uid',
+    'social.pipeline.social_auth.auth_allowed',
+    'social.pipeline.social_auth.social_user',
+    'social.pipeline.user.get_username',
+    #'social.pipeline.social_auth.associate_by_email',
+    'social.pipeline.user.create_user',
+    'social.pipeline.social_auth.associate_user',
+    'social.pipeline.social_auth.load_extra_data',
+    'social.pipeline.user.user_details'
+)
+# SOCIAL_AUTH_PIPELINE = (
+#     # Получает по backend и uid инстансы social_user и user
+#     'social_auth.backends.pipeline.social.social_auth_user',
+#     # Получает по user.email инстанс пользователя и заменяет собой тот, который получили выше.
+#     # Кстати, email выдает только Facebook и GitHub, а Vkontakte и Twitter не выдают
+#     'social_auth.backends.pipeline.associate.associate_by_email',
+#     # Пытается собрать правильный username, на основе уже имеющихся данных
+#     'social_auth.backends.pipeline.user.get_username',
+#     # Создает нового пользователя, если такого еще нет
+#     'social_auth.backends.pipeline.user.create_user',
+#     # Пытается связать аккаунты
+#     'social_auth.backends.pipeline.social.associate_user',
+#     # Получает и обновляет social_user.extra_data
+#     'social_auth.backends.pipeline.social.load_extra_data',
+#     # Обновляет инстанс user дополнительными данными с бекенда
+#     'social_auth.backends.pipeline.user.update_user_details'
+# )
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 

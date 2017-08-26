@@ -40,6 +40,9 @@ class Task(models.Model):
     create_time = models.DateTimeField(auto_now_add=True)
     status = models.CharField(choices=STATUSES, max_length=3)
 
-
     def __unicode__(self):
-        return
+        return "{0} {1}".format(self.user, self.create_time)
+
+    class Meta:
+        verbose_name = "задача"
+        verbose_name_plural = "Задачи"
