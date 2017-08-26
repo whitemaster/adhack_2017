@@ -39,6 +39,7 @@ class Task(models.Model):
     description = models.TextField(u'Комментарий')
     create_time = models.DateTimeField(auto_now_add=True)
     status = models.CharField(choices=STATUSES, max_length=3)
+    post_id = models.CharField(u'Отслеживаемый пост', max_length=200, blank=True)
 
     def __unicode__(self):
         return "{0} {1}".format(self.user, self.create_time)

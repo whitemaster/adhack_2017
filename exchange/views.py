@@ -2,6 +2,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 import vk
+import httplib
 
 
 # def getUserId(link, vkapi):
@@ -70,14 +71,29 @@ def getLikes(user_id, cnt, vkapi):
             time.sleep(1)
     return liked_posts
 
+def get_vk(access_token, user_id):
+
+
+    get_request =  '/method/likes.isLiked?user_id=' + user_id
+    get_request+= '&type=post&owner_id=-144723791'
+    get_request+= '&item_id=310&v=5.68'
+    get_request+= '&access_token='+ access_token
+    local_connect = httplib.HTTPSConnection('api.vk.com', 443)
+    local_connect.request('GET', get_request)
+    a=local_connect.getresponse().read()
+    return a
+
 
 @login_required
 def home(request):
+
     access_token = request.user.social_auth.get().access_token
     session = vk.Session(access_token=access_token)
     api = vk.API(session)
     user_id = request.user.social_auth.get().uid
 
-    liked_posts = getLikes(user_id, 1, api)
+    # liked_posts = getLikes(user_id, 1, api)
 
-    return render(request, 'core/home.html',  {'posts':liked_posts})
+    is_licked=get_vk(access_token, user_id)
+
+    return render(request, 'core/home.html',  {'is_licked':is_licked})

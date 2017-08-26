@@ -3,7 +3,8 @@
 {% block content %}
   <h2>Homepage</h2>
   <p>Hello {{ user.username }}!</p>
-    {% for post in posts %}
-        <p>{{ post }}</p>
-    {% endfor %}
+{#    {% for post in posts %}#}
+{#        <p>{{ post }}</p>#}
+{#    {% endfor %}#}
+    {{ is_licked }}
 {% endblock %}
