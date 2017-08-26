@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'social_django',
-    'exchange'
+    'exchange',
+    'vk'
 ]
 
 MIDDLEWARE = [
@@ -126,6 +127,7 @@ USE_TZ = True
 SOCIAL_AUTH_VK_OAUTH2_KEY = '6162859'
 SOCIAL_AUTH_VK_OAUTH2_SECRET = 'AkO0A0lDghdIXwf4LUHK'
 SOCIAL_AUTH_VK_OAUTH2_EXTRA_DATA = ['sex', 'bdate', 'city', 'country']
+SOCIAL_AUTH_VK_OAUTH2_SCOPE = ['wall', 'friends', 'offline']
 
 AUTHENTICATION_BACKENDS = (
     'social_core.backends.vk.VKOAuth2',
