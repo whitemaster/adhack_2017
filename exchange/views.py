@@ -1,6 +1,7 @@
 # coding: utf-8
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from exchange.forms import AddTaskForm
 import vk
 import httplib
 
@@ -97,3 +98,19 @@ def home(request):
     is_licked=get_vk(access_token, user_id)
 
     return render(request, 'core/home.html',  {'is_licked':is_licked})
+
+
+@login_required
+def add_task(request):
+    if request.method == 'POST':
+        task_form = AddTaskForm(request.POST)
+        task = task_form.save(commit=False)
+        task.user = request.user
+        task.status = task.STATUS_CONFIRM
+        task.save()
+
+    else:
+        task_form = AddTaskForm()
+
+    return render(request, 'core/add_task.html', {'task_form':task_form})
+

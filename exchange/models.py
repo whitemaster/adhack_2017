@@ -13,6 +13,13 @@ class ExtUser(AbstractUser):
 class Type(models.Model):
     name = models.CharField(u'Тип задания', max_length=100)
 
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = 'тип задания'
+        verbose_name_plural = 'Типы задания'
+
 
 class Task(models.Model):
     STATUS_NEW = "NEW"
@@ -34,12 +41,12 @@ class Task(models.Model):
     user = models.ForeignKey(ExtUser, verbose_name=u'Пользователь')
     type = models.ForeignKey(Type, verbose_name=u'Тип')
     price = models.FloatField(u'Цена')
-    max_count = models.IntegerField(u'Количество запланированных действий')
-    count = models.IntegerField(u'Количество выполненных действий')
+    max_count = models.IntegerField(u'Количество запланированных действий', default=1)
+    count = models.IntegerField(u'Количество выполненных действий', default=0)
     description = models.TextField(u'Комментарий')
     create_time = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(choices=STATUSES, max_length=3)
-    post_id = models.CharField(u'Отслеживаемый пост', max_length=200, blank=True)
+    status = models.CharField(choices=STATUSES, max_length=3, default=STATUS_NEW)
+    post_link = models.CharField(u'Отслеживаемый пост', max_length=200, blank=True)
 
     def __unicode__(self):
         return "{0} {1}".format(self.user, self.create_time)
