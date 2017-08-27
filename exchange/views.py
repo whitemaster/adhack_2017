@@ -1,24 +1,26 @@
 # coding: utf-8
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.shortcuts import render, redirect, HttpResponse
 from exchange.forms import AddTaskForm
+from exchange.models import Task, ComplitedTask
 import vk
 import httplib
+import re
+import json
 
-
-# def getUserId(link, vkapi):
-#     id = link
-#     if 'vk.com/' in link: #  проверяем эту ссылку
-#         id = link.split('/')[-1]  # если да, то получаем его последнюю часть
-#     if not id.replace('id', '').isdigit(): # если в нем после отсечения 'id' сами цифры - это и есть id
-#         id = vkapi.utils.resolveScreenName(screen_name=id)['object_id'] # если нет, получаем id с помощью метода API
-#     else:
-#         id = id.replace('id', '')
-#     return int(id)
+def get_user_id(link, vkapi):
+    id = link
+    if 'vk.com/' in link: #  проверяем эту ссылку
+        id = link.split('/')[-1]  # если да, то получаем его последнюю часть
+    if not id.replace('id', '').isdigit(): # если в нем после отсечения 'id' сами цифры - это и есть id
+        id = vkapi.utils.resolveScreenName(screen_name=id)['object_id'] # если нет, получаем id с помощью метода API
+    else:
+        id = id.replace('id', '')
+    return int(id)
 
 
 # count это количество запросов (и количество постов = 100 * count постов)
-def getLikes(user_id, cnt, vkapi):
+def get_likes(user_id, cnt, vkapi):
     import time
     # подписки пользователя
     subscriptions_list = vkapi.users.getSubscriptions(user_id=user_id,extended=0)['groups']['items']
@@ -63,7 +65,6 @@ def getLikes(user_id, cnt, vkapi):
                 owner_id=ownerID,
                 timeout=timeOut)
         except Exception:
-#             print('ERROR! ' + 'vk.com/wall{0}_{1}'.format(post[1], post[0]))
             isLiked = 0
 
         if isLiked:
@@ -72,12 +73,11 @@ def getLikes(user_id, cnt, vkapi):
             time.sleep(1)
     return liked_posts
 
-def get_vk(access_token, user_id):
 
-
+def get_vk(access_token, user_id, post_id, owner_id):
     get_request =  '/method/likes.isLiked?user_id=' + user_id
-    get_request+= '&type=post&owner_id=-144723791'
-    get_request+= '&item_id=310&v=5.68'
+    get_request+= '&type=post&owner_id=' + owner_id
+    get_request+= '&v=5.68&item_id=' + post_id
     get_request+= '&access_token='+ access_token
     local_connect = httplib.HTTPSConnection('api.vk.com', 443)
     local_connect.request('GET', get_request)
@@ -86,18 +86,45 @@ def get_vk(access_token, user_id):
 
 
 @login_required
-def home(request):
+def task_check(request, task_id):
 
+    task = Task.objects.get(id=task_id)
     access_token = request.user.social_auth.get().access_token
     session = vk.Session(access_token=access_token)
     api = vk.API(session)
     user_id = request.user.social_auth.get().uid
+    # Разбираем строку с постом на post_id, и
+    link = task.post_link
+    ankor = link.find("wall")
+    post_id = link[ankor+4:]
+    ankor = post_id.find("%2Fall")
+    if ankor>0:
+        post_id = post_id[:ankor]
+    ankor = post_id.find("_")
+    owner_id = post_id[:ankor]
+    post_id = post_id[ankor+1:]
 
-    # liked_posts = getLikes(user_id, 1, api)
+    is_licked=get_vk(access_token, user_id, post_id, owner_id)
+    is_licked = json.loads(is_licked)
+    is_licked = is_licked['response']['liked']
 
-    is_licked=get_vk(access_token, user_id)
+    if is_licked:
+        # Увеличиваем счётчик выполненных задач
+        task.count += 1
+        # Если достигли нужного количества выполнний задания, задание завершено
+        if task.count >= task.max_count:
+            task.status = Task.STATUS_DONE
+        task.save()
+        # Надо скрыть задание для пользователя навсегда, и дать ему награду
+        ct = ComplitedTask(
+            user=request.user,
+            task=task
+        )
+        ct.save()
+        request.user.balans += task.price
+        request.user.save()
 
-    return render(request, 'core/home.html',  {'is_licked':is_licked})
+    return HttpResponse(is_licked)
 
 
 @login_required
@@ -106,11 +133,17 @@ def add_task(request):
         task_form = AddTaskForm(request.POST)
         task = task_form.save(commit=False)
         task.user = request.user
-        task.status = task.STATUS_CONFIRM
+        task.status = task.STATUS_ACTIVE
         task.save()
+        return redirect('task_list')
 
     else:
         task_form = AddTaskForm()
 
-    return render(request, 'core/add_task.html', {'task_form':task_form})
+    return render(request, 'core/add_task.html', {'task_form':task_form, 'link':'add'})
 
+
+@login_required
+def task_list(request):
+    tasks = Task.objects.filter(status=Task.STATUS_ACTIVE).exclude(complited__user=request.user).order_by('-create_time')
+    return render(request, 'core/task_list.html', {'tasks':tasks, 'link':'list'})

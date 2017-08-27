@@ -1,9 +1,22 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <form method="post">
-        {% csrf_token %}
-        {{ task_form.as_p }}
-        <input type="submit">
-    </form>
+    <div class="form-block w-form">
+        <form class="form" id="task-add-form" name="email-form" method="post">
+            {% csrf_token %}
+            <label class="field-label" for="field">Цель задания:</label>{{ task_form.type }}
+            <label class="field-label-2" for="link">Ссылка:</label>{{ task_form.post_link }}
+            <label class="field-label-3" for="field-2">Стоимость одного задания:</label>{{ task_form.price }}
+            <label class="field-label-4" for="field-2">Количество:</label>{{ task_form.max_count }}
+            <label class="field-label-5" for="field-2">Комментарий:</label>{{ task_form.description }}
+
+            <input class="sub-button w-button" data-wait="Please wait..." type="submit" value="Добавить">
+            <input class="sub-button sub-no w-button" data-wait="Please wait..." type="submit" value="Отмена"></form>
+        <div class="w-form-done">
+            <div>Thank you! Your submission has been received!</div>
+        </div>
+        <div class="w-form-fail">
+            <div>Oops! Something went wrong while submitting the form.</div>
+        </div>
+    </div>
 {% endblock %}

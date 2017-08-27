@@ -43,7 +43,7 @@ class Task(models.Model):
     price = models.FloatField(u'Цена')
     max_count = models.IntegerField(u'Количество запланированных действий', default=1)
     count = models.IntegerField(u'Количество выполненных действий', default=0)
-    description = models.TextField(u'Комментарий')
+    description = models.TextField(u'Комментарий', blank=True)
     create_time = models.DateTimeField(auto_now_add=True)
     status = models.CharField(choices=STATUSES, max_length=3, default=STATUS_NEW)
     post_link = models.CharField(u'Отслеживаемый пост', max_length=200, blank=True)
@@ -54,3 +54,11 @@ class Task(models.Model):
     class Meta:
         verbose_name = "задача"
         verbose_name_plural = "Задачи"
+
+
+class ComplitedTask(models.Model):
+    """
+    Какой пользователь решил какие задачи
+    """
+    user = models.ForeignKey(ExtUser, related_name='complited')
+    task = models.ForeignKey(Task, related_name='complited')
