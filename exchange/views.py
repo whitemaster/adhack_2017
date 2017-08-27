@@ -7,6 +7,8 @@ import vk
 import httplib
 import re
 import json
+from ethjsonrpc import EthJsonRpc
+
 
 def get_user_id(link, vkapi):
     id = link
@@ -139,6 +141,11 @@ def add_task(request):
             task.status = task.STATUS_ACTIVE
             task.save()
             # снимим нужную сумму с баланса юзера
+            # Тут стучимся в эфир
+            c = EthJsonRpc('127.0.0.1', 8545)
+            c.net_version()
+            
+
             request.user.balans-= task.price*task.max_count
             request.user.save()
             return redirect('task_list')
