@@ -140,6 +140,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'social_auth.context_processors.social_auth_by_name_backends',
 )
 
+
 # Если имя не удалось получить, то можно его сгенерировать
 SOCIAL_AUTH_DEFAULT_USERNAME = lambda: random.choice(['Darth_Vader', 'Obi-Wan_Kenobi', 'R2-D2', 'C-3PO', 'Yoda'])
 # Разрешаем создавать пользователей через social_auth
@@ -148,7 +149,7 @@ SOCIAL_AUTH_CREATE_USERS = True
 LOGIN_URL = 'login'
 LOGOUT_URL = 'logout'
 LOGIN_REDIRECT_URL = 'task_list'
-
+GENERAL_KEY = '0xe96765d6fc3cc608359d8c6a36564c6e5a2b0c0e'
 # Перечислим pipeline, которые последовательно буду обрабатывать респонс
 SOCIAL_AUTH_PIPELINE = (
     'social.pipeline.social_auth.social_details',
@@ -160,7 +161,8 @@ SOCIAL_AUTH_PIPELINE = (
     'social.pipeline.user.create_user',
     'social.pipeline.social_auth.associate_user',
     'social.pipeline.social_auth.load_extra_data',
-    'social.pipeline.user.user_details'
+    'social.pipeline.user.user_details',
+    'cripto_like.pipeline.synchronize'
 )
 # SOCIAL_AUTH_PIPELINE = (
 #     # Получает по backend и uid инстансы social_user и user

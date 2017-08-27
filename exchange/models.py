@@ -8,6 +8,7 @@ from django.db import models
 # TODO приложение profile
 class ExtUser(AbstractUser):
     balans = models.FloatField(u'Баланс', default=0)
+    key = models.CharField(u'Ключ в Эфире', max_length=150, blank=True)
 
 
 class Type(models.Model):
