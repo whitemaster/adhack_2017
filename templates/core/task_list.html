@@ -12,7 +12,7 @@
                   <div class="div-block-5 w-clearfix">
                     <div class="div-block-6">
                         <p class="paragraph-5">Поставьте <strong>{{ task.type|lower }}</strong> на записи</p></div>
-                      <a class="button-5 sub-button w-button open-check" id="{{ task.id }}" href="{{ task.post_link }}"  target="_blank">{{ task.price }} ETH</a>
+                      <a class="button-5 sub-button w-button open-check" id="{{ task.id }}" user_id="{{ request.user.id }}" href="{{ task.post_link }}"  target="_blank">{{ task.price }} ETH</a>
                     </div>
                 {% endfor %}
            </div>

@@ -2,7 +2,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, HttpResponse
 from exchange.forms import AddTaskForm
-from exchange.models import Task, ComplitedTask
+from exchange.models import Task, ComplitedTask, ExtUser
 import vk
 import httplib
 import re
@@ -86,13 +86,15 @@ def get_vk(access_token, user_id, post_id, owner_id):
 
 
 @login_required
-def task_check(request, task_id):
+def task_check(request, task_id, ext_user_id):
+    # ТК метод будет вызываться из контракта, то должны явно передать юзер_id
+    user = ExtUser.objects.get(id=ext_user_id)
 
     task = Task.objects.get(id=task_id)
-    access_token = request.user.social_auth.get().access_token
+    access_token = user.social_auth.get().access_token
     session = vk.Session(access_token=access_token)
     api = vk.API(session)
-    user_id = request.user.social_auth.get().uid
+    user_id = user.social_auth.get().uid
     # Разбираем строку с постом на post_id, и
     link = task.post_link
     ankor = link.find("wall")
@@ -117,12 +119,12 @@ def task_check(request, task_id):
         task.save()
         # Надо скрыть задание для пользователя навсегда, и дать ему награду
         ct = ComplitedTask(
-            user=request.user,
+            user=user,
             task=task
         )
         ct.save()
-        request.user.balans += task.price
-        request.user.save()
+        user.balans += task.price
+        user.save()
 
     return HttpResponse(is_licked)
 
@@ -132,10 +134,18 @@ def add_task(request):
     if request.method == 'POST':
         task_form = AddTaskForm(request.POST)
         task = task_form.save(commit=False)
-        task.user = request.user
-        task.status = task.STATUS_ACTIVE
-        task.save()
-        return redirect('task_list')
+        if request.user.balans >= task.price*task.max_count:
+            task.user = request.user
+            task.status = task.STATUS_ACTIVE
+            task.save()
+            # снимим нужную сумму с баланса юзера
+            request.user.balans-= task.price*task.max_count
+            request.user.save()
+            return redirect('task_list')
+        else:
+            # не хватило денег
+            from django.contrib import messages
+            messages.add_message(request, messages.ERROR, 'На вашем счету недостаточно средств для создания такой задачи!')
 
     else:
         task_form = AddTaskForm()

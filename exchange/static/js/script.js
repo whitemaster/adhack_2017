@@ -8,8 +8,9 @@ $(document).ready(function () {
 
            //Вызываем like_checking если проверка засчитана - перечисляем деньги
            var id = $(this).attr('id');
+           var user_id = $(this).attr('user_id');
            var block = $(this).parent();
-           $.get('/task_check/'+id, function( data ){
+           $.get('/task_check/'+id+'/'+user_id, function( data ){
                if (data == '1'){
                    // Пользователь выполнил задание, скроем его, пересчитаем баланс на сервере
                    block.hide();
